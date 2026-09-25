@@ -67,6 +67,15 @@ export function useActions() {
         dispatch({ type: 'approve', submissionId, actor: REVIEWER_NAME, at: now(), eventId: newId('e'), note }),
       resubmit: (submissionId: string, fields: AssetField[], actor: string) =>
         dispatch({ type: 'resubmit', submissionId, fields, actor, at: now(), eventId: newId('e') }),
+      /** Returns the new submission's ID so the caller can navigate to it. */
+      createSubmission: (
+        submission: Omit<Extract<Action, { type: 'create_submission' }>['submission'], 'id'>,
+        actor: string,
+      ) => {
+        const id = newId('s')
+        dispatch({ type: 'create_submission', submission: { ...submission, id }, actor, at: now(), eventId: newId('e') })
+        return id
+      },
       resetDemo: () => dispatch({ type: 'reset', state: createSeed() }),
     }),
     [dispatch],

@@ -1,6 +1,7 @@
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { ScrollToTop } from './components/ScrollToTop'
 import { useActions, useAppState } from './state/store'
+import { NewSubmission } from './views/partner/NewSubmission'
 import { PartnerSubmission } from './views/partner/PartnerSubmission'
 import { PartnerSubmissions } from './views/partner/PartnerSubmissions'
 import { ReviewQueue } from './views/reviewer/ReviewQueue'
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/review" element={<ReviewQueue />} />
           <Route path="/review/:submissionId" element={<ReviewWorkspace />} />
           <Route path="/partner/:partnerId" element={<PartnerSubmissions />} />
+          <Route path="/partner/:partnerId/new" element={<NewSubmission />} />
           <Route path="/partner/:partnerId/:submissionId" element={<PartnerSubmission />} />
           <Route path="*" element={<Navigate to="/review" replace />} />
         </Routes>

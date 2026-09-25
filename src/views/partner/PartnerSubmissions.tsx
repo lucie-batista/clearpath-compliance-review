@@ -32,17 +32,23 @@ export function PartnerSubmissions() {
 
   return (
     <section className="page">
-      <header className="page-header">
-        <h1>Your submissions</h1>
-        <p className="page-summary">
-          {partner.name} · Marketing submitted to ClearPath Financial for compliance review
-          {actionNeeded > 0 && (
-            <>
-              {' · '}
-              <strong className="due-soon">{actionNeeded}</strong> need{actionNeeded === 1 ? 's' : ''} your changes
-            </>
-          )}
-        </p>
+      <header className="page-header page-header-row">
+        <div>
+          <h1>Your submissions</h1>
+          <p className="page-summary">
+            {partner.name} · Marketing submitted to ClearPath Financial for compliance review
+            {actionNeeded > 0 && (
+              <>
+                {' · '}
+                <strong className="due-soon">{actionNeeded}</strong> need{actionNeeded === 1 ? 's' : ''} your
+                changes
+              </>
+            )}
+          </p>
+        </div>
+        <Link to={`/partner/${partner.id}/new`} className="btn btn-primary">
+          + New submission
+        </Link>
       </header>
 
       {mine.length === 0 ? (

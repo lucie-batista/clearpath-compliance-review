@@ -175,6 +175,38 @@ describe('resubmission', () => {
   })
 })
 
+describe('creating a submission', () => {
+  const base = {
+    id: 's-new',
+    title: ' New card email ',
+    product: 'credit_card' as const,
+    assetType: 'search_ad' as const,
+    partnerId: 'p-ratescout',
+    fields: [
+      { key: 'headline' as const, text: 'Guaranteed approval' },
+      { key: 'description' as const, text: 'Apply today.' },
+    ],
+  }
+  const create = (state: AppState, submission = base) =>
+    reducer(state, { type: 'create_submission', submission, actor: 'Emily Burger', at: AT, eventId: 'e1' })
+
+  it('adds a v1 submission awaiting review, with a submitted event', () => {
+    const s = get(create(seed()), 's-new')
+    expect(s).toMatchObject({ title: 'New card email', status: 'awaiting_review' })
+    expect(s.versions).toHaveLength(1)
+    expect(s.events).toEqual([expect.objectContaining({ type: 'submitted', actor: 'Emily Burger', version: 1 })])
+    // Checks run on it like any other submission.
+    expect(runChecks(latestVersion(s).fields, s.product).map((f) => f.ruleId)).toEqual(['approval_certainty'])
+  })
+
+  it('rejects incomplete submissions and unknown partners', () => {
+    const state = seed()
+    expect(create(state, { ...base, title: ' ' })).toBe(state)
+    expect(create(state, { ...base, fields: [{ key: 'headline', text: '' }] })).toBe(state)
+    expect(create(state, { ...base, partnerId: 'p-nobody' })).toBe(state)
+  })
+})
+
 describe('seed data', () => {
   it('only references findings that the checks actually produce on that version', () => {
     for (const s of seed().submissions) {

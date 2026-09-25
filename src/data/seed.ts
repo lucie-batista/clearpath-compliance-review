@@ -19,11 +19,11 @@ const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
 
 const PARTNERS: Partner[] = [
-  { id: 'p-brightpath', name: 'BrightPath Media', kind: 'affiliate' },
-  { id: 'p-lendcompare', name: 'LendCompare', kind: 'affiliate' },
-  { id: 'p-ratescout', name: 'RateScout', kind: 'affiliate' },
-  { id: 'p-frugal', name: 'The Frugal Ledger', kind: 'affiliate' },
-  { id: 'p-growth', name: 'ClearPath Growth Marketing', kind: 'internal' },
+  { id: 'p-brightpath', name: 'BrightPath Media', kind: 'affiliate', contact: 'Trevor Shepherd' },
+  { id: 'p-lendcompare', name: 'LendCompare', kind: 'affiliate', contact: 'Claire Rafferty' },
+  { id: 'p-ratescout', name: 'RateScout', kind: 'affiliate', contact: 'Emily Burger' },
+  { id: 'p-frugal', name: 'The Frugal Ledger', kind: 'affiliate', contact: 'Olivia Schleifer' },
+  { id: 'p-growth', name: 'ClearPath Growth Marketing', kind: 'internal', contact: 'Abdullah Fattahi' },
 ]
 
 // ---------- Seed builder ----------

@@ -126,7 +126,9 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
             issues stay internal.
           </p>
           <label className="field">
-            Message to partner <span className="subtle">(optional)</span>
+            <span>
+              Message to partner <span className="subtle">(optional)</span>
+            </span>
             <textarea
               rows={2}
               value={note}

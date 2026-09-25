@@ -14,6 +14,8 @@ export interface Partner {
   id: string
   name: string
   kind: 'affiliate' | 'internal'
+  /** The person who submits on the partner's behalf in this demo. */
+  contact: string
 }
 
 export interface Version {

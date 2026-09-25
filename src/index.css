@@ -1378,3 +1378,52 @@ p.destination {
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* ---------- New submission ---------- */
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.page-header-row .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.new-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 860px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px 20px;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.new-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.new-copy textarea {
+  font-size: 15px;
+}
+
+.field-error {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 500;
+}

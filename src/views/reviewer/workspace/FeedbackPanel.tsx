@@ -101,7 +101,9 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
               </select>
             </label>
             <label className="field">
-              Refers to text <span className="subtle">(optional)</span>
+              <span>
+                Refers to text <span className="subtle">(optional)</span>
+              </span>
               <input
                 value={quote}
                 onChange={(e) => setQuote(e.target.value)}

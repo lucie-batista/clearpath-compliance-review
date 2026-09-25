@@ -56,6 +56,22 @@ export type Action =
       at: string
       eventId: string
     }
+  | {
+      type: 'create_submission'
+      submission: {
+        id: string
+        title: string
+        product: Submission['product']
+        assetType: Submission['assetType']
+        partnerId: string
+        neededBy?: string
+        destinationUrl?: string
+        fields: AssetField[]
+      }
+      actor: string
+      at: string
+      eventId: string
+    }
   | { type: 'reset'; state: AppState }
 
 // ---------- Selectors ----------
@@ -155,6 +171,35 @@ function event(
 
 export function reducer(state: AppState, action: Action): AppState {
   if (action.type === 'reset') return action.state
+
+  if (action.type === 'create_submission') {
+    const { submission: s, actor, at, eventId } = action
+    const fields = s.fields.map((f) => ({ ...f, text: f.text.trim() }))
+    if (!s.title.trim() || fields.length === 0 || fields.some((f) => !f.text)) return state
+    if (!state.partners.some((p) => p.id === s.partnerId)) return state
+    const created: Submission = {
+      id: s.id,
+      title: s.title.trim(),
+      product: s.product,
+      assetType: s.assetType,
+      partnerId: s.partnerId,
+      ...(s.neededBy ? { neededBy: s.neededBy } : {}),
+      status: 'awaiting_review',
+      versions: [
+        {
+          number: 1,
+          fields,
+          ...(s.destinationUrl?.trim() ? { destinationUrl: s.destinationUrl.trim() } : {}),
+          submittedAt: at,
+          submittedBy: actor,
+        },
+      ],
+      findingReviews: [],
+      comments: [],
+      events: [event(eventId, 'submitted', actor, at, 1)],
+    }
+    return { ...state, submissions: [...state.submissions, created] }
+  }
 
   return updateSubmission(state, action.submissionId, (s) => {
     const current = latestVersion(s).number
