@@ -1,5 +1,5 @@
 import { dueLabel } from '../lib/format'
-import type { EventType, Submission } from './types'
+import type { EventType, Partner, Product, Submission } from './types'
 import { currentFindings, findingReview, latestVersion, sharedComments } from './workflow'
 
 export type QueueTab = 'needs_review' | 'waiting' | 'approved' | 'all'
@@ -33,7 +33,56 @@ function urgencyOf(submission: Submission, now: Date) {
   return dueLabel(submission.neededBy, now).urgency
 }
 
-export function queueFor(submissions: Submission[], tab: QueueTab): Submission[] {
+export type QueueSort = 'urgent' | 'oldest' | 'issues' | 'newest'
+
+export const QUEUE_SORTS: { id: QueueSort; label: string }[] = [
+  { id: 'urgent', label: 'Most urgent' },
+  { id: 'oldest', label: 'Oldest waiting' },
+  { id: 'issues', label: 'Most potential issues' },
+  { id: 'newest', label: 'Newest' },
+]
+
+export interface QueueFilters {
+  search: string
+  product: Product | ''
+  partnerId: string
+}
+
+/** Matches title, submitter name, or any text in the latest version. */
+export function filterSubmissions(
+  submissions: Submission[],
+  filters: QueueFilters,
+  partners: Partner[],
+): Submission[] {
+  const needle = filters.search.trim().toLowerCase()
+  return submissions.filter((s) => {
+    if (filters.product && s.product !== filters.product) return false
+    if (filters.partnerId && s.partnerId !== filters.partnerId) return false
+    if (!needle) return true
+    const partner = partners.find((p) => p.id === s.partnerId)?.name ?? ''
+    const text = [s.title, partner, ...latestVersion(s).fields.map((f) => f.text)].join(' ').toLowerCase()
+    return text.includes(needle)
+  })
+}
+
+/** Tab membership plus ordering. "Most urgent" keeps each tab's natural order. */
+export function queueFor(submissions: Submission[], tab: QueueTab, sort: QueueSort = 'urgent'): Submission[] {
+  const rows = tabRows(submissions, tab)
+  const submitted = (s: Submission) => time(latestVersion(s).submittedAt)
+  switch (sort) {
+    case 'urgent':
+      return rows
+    case 'oldest':
+      return [...rows].sort((a, b) => submitted(a) - submitted(b))
+    case 'newest':
+      return [...rows].sort((a, b) => submitted(b) - submitted(a))
+    case 'issues':
+      // Stable sort keeps the tab's natural order among equals.
+      return [...rows].sort((a, b) => unreviewedFindings(b) - unreviewedFindings(a))
+  }
+}
+
+function tabRows(submissions: Submission[], tab: QueueTab): Submission[] {
   switch (tab) {
     case 'needs_review':
       // Most urgent first; among equals, whoever has waited longest.

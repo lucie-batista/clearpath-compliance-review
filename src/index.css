@@ -1513,3 +1513,37 @@ p.destination {
 .checks-info p {
   margin: 0;
 }
+
+/* ---------- Queue toolbar ---------- */
+.queue-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 12px;
+}
+
+.queue-toolbar select,
+.queue-toolbar input {
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+.queue-search {
+  flex: 1 1 240px;
+  min-width: 0;
+  max-width: 360px;
+}
+
+.queue-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.queue-toolbar .btn-link {
+  margin-left: 0;
+}
