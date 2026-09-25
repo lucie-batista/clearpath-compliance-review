@@ -1,13 +1,9 @@
 export type Product = 'personal_loan' | 'credit_card' | 'mortgage_prequal'
 
-export type AssetType =
-  | 'affiliate_landing_page'
-  | 'affiliate_email'
-  | 'display_ad'
-  | 'social_ad'
-  | 'marketing_email'
+/** The format of the asset. Who submitted it is captured separately by the partner. */
+export type AssetType = 'landing_page' | 'email' | 'search_ad' | 'social_post' | 'display_ad'
 
-export type FieldKey = 'subject' | 'headline' | 'post' | 'body' | 'cta' | 'disclosure'
+export type FieldKey = 'subject' | 'headline' | 'post' | 'body' | 'description' | 'cta' | 'disclosure'
 
 export interface AssetField {
   key: FieldKey

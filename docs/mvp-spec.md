@@ -100,15 +100,17 @@ Revision review happens in the same workspace, for version 2 onward:
 
 ## Asset model
 
-Every asset is an ordered list of labeled text fields plus a destination URL. Each asset type is a template of field labels:
+Every asset is an ordered list of labeled text fields plus a destination URL. The asset type describes the format; who submitted it (affiliate partner or internal team) is captured separately. Each asset type is a template of field labels:
 
 | Asset type | Fields |
 |---|---|
-| Affiliate landing page | Headline, Body, Call to action, Disclosure |
-| Affiliate email | Subject line, Body, Call to action, Disclosure |
+| Landing page | Headline, Body, Call to action, Disclosure |
+| Email | Subject line, Body, Call to action, Disclosure |
+| Search ad | Headline, Description |
+| Social post | Post text, Call to action |
 | Display ad | Headline, Body, Call to action |
-| Social ad | Post text, Call to action |
-| Marketing email | Subject line, Body, Call to action, Disclosure |
+
+Display ads are largely visual in practice. The MVP reviews their text only.
 
 ## Automated checks
 

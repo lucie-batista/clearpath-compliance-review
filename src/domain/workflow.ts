@@ -1,8 +1,10 @@
+import { runChecks, type Finding } from './checks'
 import type {
   AppState,
   AssetField,
   Comment,
   FieldKey,
+  FindingReview,
   HistoryEvent,
   Submission,
   Version,
@@ -59,6 +61,16 @@ export type Action =
 
 export function latestVersion(submission: Submission): Version {
   return submission.versions[submission.versions.length - 1]
+}
+
+/** Potential issues on the latest version. Always computed from the content, never stored. */
+export function currentFindings(submission: Submission): Finding[] {
+  return runChecks(latestVersion(submission).fields, submission.product)
+}
+
+export function findingReview(submission: Submission, findingKey: string): FindingReview | undefined {
+  const version = latestVersion(submission).number
+  return submission.findingReviews.find((r) => r.version === version && r.findingKey === findingKey)
 }
 
 export function isUnderReview(submission: Submission): boolean {

@@ -1,122 +1,64 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
+import { useActions, useAppState } from './state/store'
+import { PartnerSubmission } from './views/partner/PartnerSubmission'
+import { PartnerSubmissions } from './views/partner/PartnerSubmissions'
+import { ReviewQueue } from './views/reviewer/ReviewQueue'
+import { ReviewWorkspace } from './views/reviewer/ReviewWorkspace'
 
-function App() {
-  const [count, setCount] = useState(0)
+function ViewingAs() {
+  const { partners } = useAppState()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const current = pathname.startsWith('/partner/') ? pathname.split('/')[2] : 'reviewer'
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <label className="viewing-as">
+      Viewing as{' '}
+      <select
+        value={current}
+        onChange={(e) => navigate(e.target.value === 'reviewer' ? '/review' : `/partner/${e.target.value}`)}
+      >
+        <option value="reviewer">Compliance reviewer</option>
+        {partners
+          .filter((p) => p.kind === 'affiliate')
+          .map((p) => (
+            <option key={p.id} value={p.id}>
+              Partner: {p.name}
+            </option>
+          ))}
+      </select>
+    </label>
   )
 }
 
-export default App
+export default function App() {
+  const actions = useActions()
+  const navigate = useNavigate()
+
+  return (
+    <>
+      <header className="app-header">
+        <strong>ClearPath Compliance Review</strong>
+        <ViewingAs />
+        <button
+          onClick={() => {
+            actions.resetDemo()
+            navigate('/review')
+          }}
+        >
+          Reset demo data
+        </button>
+      </header>
+      <main>
+        <Routes>
+          <Route path="/" element={<Navigate to="/review" replace />} />
+          <Route path="/review" element={<ReviewQueue />} />
+          <Route path="/review/:submissionId" element={<ReviewWorkspace />} />
+          <Route path="/partner/:partnerId" element={<PartnerSubmissions />} />
+          <Route path="/partner/:partnerId/:submissionId" element={<PartnerSubmission />} />
+          <Route path="*" element={<Navigate to="/review" replace />} />
+        </Routes>
+      </main>
+    </>
+  )
+}
