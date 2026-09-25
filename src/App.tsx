@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { useActions, useAppState } from './state/store'
 import { PartnerSubmission } from './views/partner/PartnerSubmission'
 import { PartnerSubmissions } from './views/partner/PartnerSubmissions'
@@ -13,7 +13,7 @@ function ViewingAs() {
 
   return (
     <label className="viewing-as">
-      Viewing as{' '}
+      <span>Viewing as</span>
       <select
         value={current}
         onChange={(e) => navigate(e.target.value === 'reviewer' ? '/review' : `/partner/${e.target.value}`)}
@@ -38,16 +38,23 @@ export default function App() {
   return (
     <>
       <header className="app-header">
-        <strong>ClearPath Compliance Review</strong>
-        <ViewingAs />
-        <button
-          onClick={() => {
-            actions.resetDemo()
-            navigate('/review')
-          }}
-        >
-          Reset demo data
-        </button>
+        <Link to="/review" className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          <span className="brand-name">ClearPath</span>
+          <span className="brand-product">Compliance Review</span>
+        </Link>
+        <div className="header-controls">
+          <ViewingAs />
+          <button
+            className="btn btn-ghost-inverse"
+            onClick={() => {
+              actions.resetDemo()
+              navigate('/review')
+            }}
+          >
+            Reset demo data
+          </button>
+        </div>
       </header>
       <main>
         <Routes>

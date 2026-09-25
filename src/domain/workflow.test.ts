@@ -158,9 +158,20 @@ describe('resubmission', () => {
 })
 
 describe('seed data', () => {
-  it('references findings that the checks actually produce', () => {
-    const s = get(seed(), 's-1003')
-    const keys = new Set(runChecks(latestVersion(s).fields, s.product).map((f) => f.key))
-    expect(s.findingReviews.every((r) => keys.has(r.findingKey))).toBe(true)
+  it('only references findings that the checks actually produce on that version', () => {
+    for (const s of seed().submissions) {
+      for (const r of s.findingReviews) {
+        const version = s.versions.find((v) => v.number === r.version)!
+        const keys = runChecks(version.fields, s.product).map((f) => f.key)
+        expect(keys, `${s.id} v${r.version}`).toContain(r.findingKey)
+      }
+    }
+  })
+
+  it('covers every status, asset type, and product', () => {
+    const subs = seed().submissions
+    expect(new Set(subs.map((s) => s.status)).size).toBe(4)
+    expect(new Set(subs.map((s) => s.assetType)).size).toBe(5)
+    expect(new Set(subs.map((s) => s.product)).size).toBe(3)
   })
 })

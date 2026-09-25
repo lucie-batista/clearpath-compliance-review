@@ -34,6 +34,12 @@ describe('runChecks', () => {
       ])
     })
 
+    it('catches mortgage-style rates with three decimals', () => {
+      expect(runChecks(body('Rates as low as 5.875%.'), 'mortgage_prequal').map((f) => f.text)).toEqual([
+        '5.875%',
+      ])
+    })
+
     it('does not flag when APR appears anywhere in the asset, including another field', () => {
       const fields: AssetField[] = [
         { key: 'body', text: 'Rates as low as 7.99%.' },

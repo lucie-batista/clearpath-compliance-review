@@ -59,7 +59,7 @@ function matchAll(pattern: RegExp, fields: AssetField[]): Match[] {
 }
 
 const RATE_OR_PAYMENT =
-  /\b\d{1,2}(?:\.\d{1,2})?\s?%|\$\d[\d,]*(?:\.\d{2})?\s?(?:\/\s?mo(?:nth)?|per month|a month)\b/gi
+  /\b\d{1,2}(?:\.\d{1,3})?\s?%|\$\d[\d,]*(?:\.\d{2})?\s?(?:\/\s?mo(?:nth)?|per month|a month)\b/gi
 const APR_MENTION = /\bAPR\b|annual percentage rate/i
 
 const RULES: RuleDefinition[] = [
