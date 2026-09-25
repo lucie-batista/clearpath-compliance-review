@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:ai": "node scripts/eval-ai-review.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",

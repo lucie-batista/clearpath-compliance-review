@@ -66,12 +66,7 @@ export interface HistoryEvent {
   note?: string
 }
 
-export type AiCategory =
-  | 'implied_claim'
-  | 'missing_disclosure'
-  | 'misleading_framing'
-  | 'embedded_instructions'
-  | 'other'
+export type AiCategory = 'implied_claim' | 'misleading_framing' | 'missing_disclosure' | 'embedded_instructions'
 
 /** A potential issue suggested by the AI second opinion. Advisory only; the reviewer decides. */
 export interface AiFinding {

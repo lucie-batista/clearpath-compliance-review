@@ -1,5 +1,5 @@
 import type { AiFinding, AiReview, Submission } from '../domain/types'
-import { latestVersion } from '../domain/workflow'
+import { currentFindings, latestVersion } from '../domain/workflow'
 
 export type AiReviewError = 'not_configured' | 'rate_limited' | 'busy' | 'declined' | 'invalid' | 'failed' | 'network'
 
@@ -15,7 +15,13 @@ export async function requestAiReview(submission: Submission): Promise<AiReviewR
     res = await fetch('/api/ai-review', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ product: submission.product, assetType: submission.assetType, fields: version.fields }),
+      body: JSON.stringify({
+        product: submission.product,
+        assetType: submission.assetType,
+        fields: version.fields,
+        // Tell the AI what the keyword checks already caught, so it focuses on what they miss.
+        alreadyFlagged: currentFindings(submission).map((f) => f.text),
+      }),
     })
   } catch {
     return { ok: false, error: 'network' }

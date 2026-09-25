@@ -3,7 +3,7 @@ import { DueDate } from '../../../components/DueDate'
 import { StatusBadge } from '../../../components/StatusBadge'
 import { ASSET_TYPE_LABELS, PRODUCT_LABELS } from '../../../domain/catalog'
 import { submitterTerms } from '../../../domain/partners'
-import { unreviewedFindings } from '../../../domain/queue'
+import { unreviewedAiSuggestions, unreviewedFindings } from '../../../domain/queue'
 import type { Partner, Submission } from '../../../domain/types'
 import { canRequestChanges, isUnderReview, latestVersion, sharedComments } from '../../../domain/workflow'
 import { timeAgo } from '../../../lib/format'
@@ -33,6 +33,7 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
 
   const shared = sharedComments(submission, version.number).length
   const unreviewed = unreviewedFindings(submission)
+  const unreviewedAi = unreviewedAiSuggestions(submission)
   const canRequest = canRequestChanges(submission)
   const terms = submitterTerms(partner)
   const partnerName = partner?.name ?? `the ${terms.noun}`
@@ -75,7 +76,7 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
             </button>
             <button
               className={canRequest ? 'btn' : 'btn btn-primary'}
-              onClick={() => (unreviewed > 0 || shared > 0 ? setMode('approve') : approve())}
+              onClick={() => (unreviewed > 0 || unreviewedAi > 0 || shared > 0 ? setMode('approve') : approve())}
             >
               Approve
             </button>
@@ -169,6 +170,7 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
           <h2>Approve with open items?</h2>
           <ul>
             {unreviewed > 0 && <li>{plural(unreviewed, 'potential issue')} not yet reviewed.</li>}
+            {unreviewedAi > 0 && <li>{plural(unreviewedAi, 'AI suggestion')} not yet reviewed.</li>}
             {shared > 0 && (
               <li>
                 {plural(shared, 'feedback item')} you added won’t be sent to {partnerName} if you approve.

@@ -1,6 +1,6 @@
 import { dueLabel } from '../lib/format'
 import type { EventType, Partner, Product, Submission } from './types'
-import { currentFindings, findingReview, latestVersion, sharedComments } from './workflow'
+import { currentAiReview, currentFindings, findingReview, latestVersion, sharedComments } from './workflow'
 
 export type QueueTab = 'needs_review' | 'waiting' | 'approved' | 'all'
 
@@ -21,6 +21,11 @@ export function lastEventAt(submission: Submission, type?: EventType): string {
 /** Potential issues on the latest version that the reviewer hasn't confirmed or dismissed yet. */
 export function unreviewedFindings(submission: Submission): number {
   return currentFindings(submission).filter((f) => !findingReview(submission, f.key)).length
+}
+
+/** AI suggestions on the latest version that the reviewer hasn't confirmed or dismissed yet. */
+export function unreviewedAiSuggestions(submission: Submission): number {
+  return (currentAiReview(submission)?.findings ?? []).filter((f) => !findingReview(submission, f.key)).length
 }
 
 export function feedbackSent(submission: Submission): number {

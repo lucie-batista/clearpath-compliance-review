@@ -5,7 +5,6 @@ export const AI_CATEGORY_LABELS: Record<AiCategory, string> = {
   missing_disclosure: 'Missing context',
   misleading_framing: 'Misleading framing',
   embedded_instructions: 'Text aimed at reviewers',
-  other: 'Other',
 }
 
 export const STATUS_LABELS: Record<SubmissionStatus, string> = {

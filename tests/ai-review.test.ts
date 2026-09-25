@@ -11,7 +11,7 @@ vi.mock('@anthropic-ai/sdk', () => {
   return { default: Anthropic }
 })
 
-const { POST, buildUserMessage, sanitizeFindings, validateRequest } = await import('../api/ai-review.ts')
+const { POST, buildUserMessage, locateQuote, sanitizeFindings, validateRequest } = await import('../api/ai-review.ts')
 
 const valid = {
   product: 'personal_loan',
@@ -83,8 +83,28 @@ describe('sanitizeFindings', () => {
     expect(sanitizeFindings('not json', req)).toEqual([])
   })
 
-  it('caps the number of findings', () => {
-    expect(sanitizeFindings({ findings: Array(10).fill(finding()) }, req)).toHaveLength(6)
+  it('caps the number of findings, to keep suggestions to the few that matter', () => {
+    expect(sanitizeFindings({ findings: Array(10).fill(finding()) }, req)).toHaveLength(3)
+  })
+
+  it('drops findings on words the keyword checks already flagged', () => {
+    const withFlags = { ...req, alreadyFlagged: ['Cash in your account'] }
+    expect(sanitizeFindings({ findings: [finding()] }, withFlags)).toEqual([])
+  })
+
+  it('keeps a real quote even if the model straightened quotes or changed spacing', () => {
+    const curly = { ...req, fields: [{ key: 'headline' as const, text: 'We’ve reserved a card  in your name' }] }
+    const [f] = sanitizeFindings({ findings: [finding({ quote: "We've reserved a card in your name" })] }, curly)
+    // The returned quote is the copy's own text, so highlighting matches exactly.
+    expect(f.quote).toBe('We’ve reserved a card  in your name')
+  })
+})
+
+describe('locateQuote', () => {
+  it('finds exact and near-exact quotes, and nothing else', () => {
+    expect(locateQuote('Pay what works for you', 'what works')).toBe('what works')
+    expect(locateQuote('It’s ready — claim it', "It's ready - claim it")).toBe('It’s ready — claim it')
+    expect(locateQuote('Pay what works for you', 'guaranteed approval')).toBeNull()
   })
 })
 
@@ -128,7 +148,7 @@ describe('POST /api/ai-review', () => {
               {
                 field: 'headline',
                 quote: 'This text is not in the ad',
-                category: 'other',
+                category: 'implied_claim',
                 title: 'Hallucinated',
                 explanation: 'x',
                 suggested_feedback: 'x',
