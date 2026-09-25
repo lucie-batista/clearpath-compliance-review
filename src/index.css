@@ -488,12 +488,6 @@ button:disabled {
   margin-bottom: 12px;
 }
 
-.panel-footnote {
-  margin: 12px 0 0;
-  font-size: 12px;
-  color: var(--text-subtle);
-}
-
 .button-row {
   display: flex;
   flex-wrap: wrap;
@@ -1474,4 +1468,48 @@ p.destination {
 .decision-panel-danger {
   background: var(--red-soft);
   border-color: #f2c4c4;
+}
+
+/* ---------- What's checked ---------- */
+.checks-info {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.checks-info summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.checks-info summary::-webkit-details-marker {
+  display: none;
+}
+
+.checks-info-link {
+  color: var(--accent);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.checks-info[open] .checks-info-link {
+  text-decoration: underline;
+}
+
+.checks-info ul {
+  margin: 10px 0 8px;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.checks-info strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.checks-info p {
+  margin: 0;
 }

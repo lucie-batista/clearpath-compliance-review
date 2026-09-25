@@ -72,9 +72,23 @@ export function IssuesPanel({ submission, activeKey, onSelect }: Props) {
         findings.length > 0 && <ul className="issue-list">{findings.map(card)}</ul>
       )}
 
-      <p className="panel-footnote">
-        Automated checks flag language for review. They don’t make compliance determinations.
-      </p>
+      <details className="checks-info">
+        <summary>
+          Automated checks flag language for review. They don’t make compliance determinations.{' '}
+          <span className="checks-info-link">What’s checked?</span>
+        </summary>
+        <ul>
+          {Object.values(CHECK_RULES).map((rule) => (
+            <li key={rule.id}>
+              <strong>{rule.label}.</strong> {rule.explanation}
+            </li>
+          ))}
+        </ul>
+        <p>
+          This is an illustrative ClearPath policy checklist, not a complete or legally authoritative rule set. Each
+          flag is a prompt for your judgment.
+        </p>
+      </details>
     </section>
   )
 }
