@@ -61,10 +61,24 @@ export function useActions() {
         dispatch({ type: 'set_comment_resolved', submissionId, commentId, resolved }),
       editComment: (submissionId: string, commentId: string, body: string) =>
         dispatch({ type: 'edit_comment', submissionId, commentId, body }),
-      requestChanges: (submissionId: string, note?: string) =>
-        dispatch({ type: 'request_changes', submissionId, actor: REVIEWER_NAME, at: now(), eventId: newId('e'), note }),
-      approve: (submissionId: string, note?: string) =>
-        dispatch({ type: 'approve', submissionId, actor: REVIEWER_NAME, at: now(), eventId: newId('e'), note }),
+      // Decisions return their event ID so the confirmation can offer Undo.
+      requestChanges: (submissionId: string, note?: string) => {
+        const eventId = newId('e')
+        dispatch({ type: 'request_changes', submissionId, actor: REVIEWER_NAME, at: now(), eventId, note })
+        return eventId
+      },
+      approve: (submissionId: string, note?: string) => {
+        const eventId = newId('e')
+        dispatch({ type: 'approve', submissionId, actor: REVIEWER_NAME, at: now(), eventId, note })
+        return eventId
+      },
+      reject: (submissionId: string, note: string) => {
+        const eventId = newId('e')
+        dispatch({ type: 'reject', submissionId, actor: REVIEWER_NAME, at: now(), eventId, note })
+        return eventId
+      },
+      undoDecision: (submissionId: string, eventId: string) =>
+        dispatch({ type: 'undo_decision', submissionId, eventId }),
       resubmit: (submissionId: string, fields: AssetField[], actor: string) =>
         dispatch({ type: 'resubmit', submissionId, fields, actor, at: now(), eventId: newId('e') }),
       /** Returns the new submission's ID so the caller can navigate to it. */

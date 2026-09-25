@@ -129,6 +129,36 @@ describe('decisions', () => {
   })
 })
 
+describe('undoing a decision', () => {
+  it('returns the submission to review and removes the decision from history', () => {
+    const approved = reducer(seed(), { type: 'approve', submissionId: 's-1002', actor: REVIEWER, at: AT, eventId: 'e1' })
+    const undone = get(reducer(approved, { type: 'undo_decision', submissionId: 's-1002', eventId: 'e1' }), 's-1002')
+    expect(undone.status).toBe('awaiting_review')
+    expect(undone.events.map((e) => e.type)).toEqual(['submitted'])
+  })
+
+  it('keeps feedback when undoing a change request, so the reviewer can adjust and resend', () => {
+    const state = seed()
+    const before = get(state, 's-1003')
+    const commentsBefore = before.comments
+    const eventId = before.events[before.events.length - 1].id
+    const undone = get(reducer(state, { type: 'undo_decision', submissionId: 's-1003', eventId }), 's-1003')
+    expect(undone.status).toBe('awaiting_review')
+    expect(undone.comments).toEqual(commentsBefore)
+  })
+
+  it('refuses once something has happened since (e.g. the partner resubmitted)', () => {
+    let state = reducer(seed(), { type: 'approve', submissionId: 's-1002', actor: REVIEWER, at: AT, eventId: 'e1' })
+    state = reducer(state, { type: 'undo_decision', submissionId: 's-1002', eventId: 'wrong-id' })
+    expect(get(state, 's-1002').status).toBe('approved')
+    // Latest event on s-1006 is a resubmission, not a decision.
+    const seeded = seed()
+    const events = get(seeded, 's-1006').events
+    const lastId = events[events.length - 1].id
+    expect(reducer(seeded, { type: 'undo_decision', submissionId: 's-1006', eventId: lastId })).toBe(seeded)
+  })
+})
+
 describe('resubmission', () => {
   const revised = (state: AppState) =>
     latestVersion(get(state, 's-1003')).fields.map((f) =>

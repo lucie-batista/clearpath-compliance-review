@@ -13,7 +13,7 @@ import {
   type QueueTab,
 } from '../../domain/queue'
 import type { Partner, Submission } from '../../domain/types'
-import { latestVersion } from '../../domain/workflow'
+import { currentFindings, latestVersion } from '../../domain/workflow'
 import { timeAgo } from '../../lib/format'
 import { useAppState } from '../../state/store'
 
@@ -138,7 +138,7 @@ function columnsFor(tab: QueueTab, partnerOf: (s: Submission) => Partner | undef
     },
   }
   const partner: Column = {
-    header: 'Partner',
+    header: 'Submitted by',
     cell: (s) => {
       const p = partnerOf(s)
       return (
@@ -170,8 +170,9 @@ function columnsFor(tab: QueueTab, partnerOf: (s: Submission) => Partner | undef
           header: 'Potential issues',
           cell: (s) => {
             const n = unreviewedFindings(s)
-            return n > 0 ? (
-              <span className="issue-count">{plural(n, 'potential issue')}</span>
+            if (n > 0) return <span className="issue-count">{plural(n, 'potential issue')}</span>
+            return currentFindings(s).length > 0 ? (
+              <span className="subtle">All issues reviewed</span>
             ) : (
               <span className="subtle">None detected</span>
             )

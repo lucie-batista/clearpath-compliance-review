@@ -10,11 +10,10 @@ export function PartnerContext({ submission, partner }: { submission: Submission
   return (
     <section className="panel">
       <div className="panel-heading">
-        <h2>Partner history</h2>
-        <span className="subtle">{partner?.name}</span>
+        <h2>History with {partner?.name ?? 'this submitter'}</h2>
       </div>
       {history.total === 0 ? (
-        <p className="muted">First submission from this partner. No review history yet.</p>
+        <p className="muted">First submission from them. No review history yet.</p>
       ) : (
         <>
           <dl className="stats">
@@ -44,7 +43,7 @@ export function PartnerContext({ submission, partner }: { submission: Submission
               </ul>
             </div>
           ) : (
-            <p className="muted">No issues confirmed on this partner’s previous submissions.</p>
+            <p className="muted">No issues confirmed on their previous submissions.</p>
           )}
         </>
       )}

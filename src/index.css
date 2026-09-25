@@ -740,8 +740,24 @@ textarea {
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 20px;
+  grid-template-areas:
+    'main side'
+    'context side';
+  grid-template-rows: auto 1fr;
+  gap: 0 20px;
   align-items: start;
+}
+
+.ws-main {
+  grid-area: main;
+}
+
+.ws-side {
+  grid-area: side;
+}
+
+.ws-context {
+  grid-area: context;
 }
 
 .destination {
@@ -1130,6 +1146,11 @@ textarea {
 @media (max-width: 960px) {
   .workspace {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'main'
+      'side'
+      'context';
+    grid-template-rows: auto;
   }
 }
 
@@ -1426,4 +1447,31 @@ p.destination {
   color: var(--red);
   font-size: 12px;
   font-weight: 500;
+}
+
+.btn-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--red);
+}
+
+.btn-danger {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #8a2124;
+  border-color: #8a2124;
+}
+
+.decision-panel-danger {
+  background: var(--red-soft);
+  border-color: #f2c4c4;
 }

@@ -125,7 +125,7 @@ function IssueCard({ submission, finding, active, onSelect }: CardProps) {
       <p className="issue-why">{rule.explanation}</p>
 
       {!review && prior?.decision === 'confirmed' && (
-        <p className="issue-history">Confirmed on v{prior.version} and sent to the partner. Text is unchanged.</p>
+        <p className="issue-history">Confirmed on v{prior.version} and sent back for changes. Text is unchanged.</p>
       )}
 
       {review ? (

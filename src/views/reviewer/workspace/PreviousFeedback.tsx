@@ -1,7 +1,8 @@
 import { REVIEWER_NAME } from '../../../data/seed'
 import { FIELD_LABELS } from '../../../domain/catalog'
 import { feedbackStatus, previousVersion, type FeedbackStatus } from '../../../domain/revision'
-import type { Submission } from '../../../domain/types'
+import { submitterTerms } from '../../../domain/partners'
+import type { Partner, Submission } from '../../../domain/types'
 import { isUnderReview, latestVersion } from '../../../domain/workflow'
 import { useActions } from '../../../state/store'
 
@@ -16,7 +17,7 @@ const STATUS: Record<FeedbackStatus, { label: string; tone: string }> = {
  * Feedback sent on the previous version, checked against the new text. The status says
  * what changed; the reviewer decides whether each item was actually addressed.
  */
-export function PreviousFeedback({ submission }: { submission: Submission }) {
+export function PreviousFeedback({ submission, partner }: { submission: Submission; partner?: Partner }) {
   const actions = useActions()
   const prev = previousVersion(submission)
   if (!prev) return null
@@ -31,9 +32,11 @@ export function PreviousFeedback({ submission }: { submission: Submission }) {
     <section className="panel">
       <div className="panel-heading">
         <h2>{mine ? 'Your' : 'Reviewer'} feedback on v{prev.number}</h2>
-        <span className="subtle">
-          {resolved} of {items.length} marked addressed
-        </span>
+        {editable && (
+          <span className="subtle">
+            {resolved} of {items.length} marked addressed
+          </span>
+        )}
       </div>
       <p className="panel-intro">
         What {mine ? 'you' : 'the reviewer'} asked for last round, checked against v{current.number}.
@@ -46,7 +49,7 @@ export function PreviousFeedback({ submission }: { submission: Submission }) {
               <div className="comment-meta">
                 <span className={`change-status change-${status.tone}`}>{status.label}</span>
                 <span className={`tag ${c.visibility === 'shared' ? 'tag-shared' : 'tag-internal'}`}>
-                  {c.visibility === 'shared' ? 'For partner' : 'Internal'}
+                  {c.visibility === 'shared' ? submitterTerms(partner).forTag : 'Internal'}
                 </span>
                 <span className="subtle">
                   {FIELD_LABELS[c.field]}

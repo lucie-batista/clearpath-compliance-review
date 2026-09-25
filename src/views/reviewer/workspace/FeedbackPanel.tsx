@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FIELD_LABELS } from '../../../domain/catalog'
+import { submitterTerms } from '../../../domain/partners'
 import type { Comment, FieldKey, Partner, Submission, Visibility } from '../../../domain/types'
 import { commentsForVersion, isUnderReview, latestVersion } from '../../../domain/workflow'
 import { useActions } from '../../../state/store'
@@ -12,7 +13,8 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
   // The previous version's feedback has its own panel (checked against the new text); older rounds collapse here.
   const earlier = submission.comments.filter((c) => c.version < version.number - 1)
   const forPartner = current.filter((c) => c.visibility === 'shared').length
-  const partnerName = partner?.name ?? 'the partner'
+  const terms = submitterTerms(partner)
+  const partnerName = partner?.name ?? `the ${terms.noun}`
 
   const [open, setOpen] = useState(false)
   const [field, setField] = useState<FieldKey>(version.fields[0].key)
@@ -29,6 +31,8 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
   }
 
   const sentToPartner = submission.status === 'changes_requested' || submission.status === 'rejected'
+  // Nothing to show on a decided version with no feedback.
+  if (!editable && current.length === 0 && earlier.length === 0) return null
 
   return (
     <section className="panel">
@@ -36,7 +40,7 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
         <h2>{editable ? 'Feedback draft' : 'Feedback'}</h2>
         {current.length > 0 && (
           <span className="subtle">
-            {forPartner} for partner · {current.length - forPartner} internal
+            {forPartner} for {terms.noun} · {current.length - forPartner} internal
           </span>
         )}
       </div>
@@ -44,7 +48,7 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
       {editable ? (
         <p className="draft-note">
           {forPartner > 0
-            ? `Not sent yet. ${partnerName} receives the “For partner” items when you request changes. Internal notes stay with your team.`
+            ? `Not sent yet. ${partnerName} receives the “${terms.forTag}” items when you request changes. Internal notes stay with your team.`
             : current.length > 0
               ? `Internal notes are saved to this submission’s record for your team. They’re never shared with ${partnerName}.`
               : `Confirm issues or add comments. Items for ${partnerName} are sent when you request changes; internal notes stay with your team.`}
@@ -54,13 +58,13 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
         sentToPartner && <p className="draft-note draft-note-sent">Sent to {partnerName}.</p>
       )}
 
-      {current.length === 0 && !editable && <p className="muted">No feedback was added to this version.</p>}
 
       <ul className="comment-list">
         {current.map((c) => (
           <CommentItem
             key={c.id}
             comment={c}
+            forTag={terms.forTag}
             onEdit={editable ? (text) => actions.editComment(submission.id, c.id, text) : undefined}
             onDelete={editable ? () => actions.deleteComment(submission.id, c.id) : undefined}
           />
@@ -86,7 +90,7 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
                   className={visibility === v ? 'segment segment-active' : 'segment'}
                   onClick={() => setVisibility(v)}
                 >
-                  {v === 'shared' ? 'For partner' : 'Internal note'}
+                  {v === 'shared' ? terms.forTag : 'Internal note'}
                 </button>
               ))}
             </div>
@@ -134,7 +138,7 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
           <summary>Feedback on earlier versions ({earlier.length})</summary>
           <ul className="comment-list">
             {earlier.map((c) => (
-              <CommentItem key={c.id} comment={c} showVersion />
+              <CommentItem key={c.id} comment={c} forTag={terms.forTag} showVersion />
             ))}
           </ul>
         </details>
@@ -145,11 +149,13 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
 
 function CommentItem({
   comment,
+  forTag,
   onEdit,
   onDelete,
   showVersion,
 }: {
   comment: Comment
+  forTag: string
   onEdit?: (body: string) => void
   onDelete?: () => void
   showVersion?: boolean
@@ -161,7 +167,7 @@ function CommentItem({
       <div className="comment-meta">
         {showVersion && <span className="tag">v{comment.version}</span>}
         <span className={`tag ${comment.visibility === 'shared' ? 'tag-shared' : 'tag-internal'}`}>
-          {comment.visibility === 'shared' ? 'For partner' : 'Internal'}
+          {comment.visibility === 'shared' ? forTag : 'Internal'}
         </span>
         <span className="subtle">
           {FIELD_LABELS[comment.field]}

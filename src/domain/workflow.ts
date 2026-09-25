@@ -48,6 +48,8 @@ export type Action =
   | { type: 'request_changes'; submissionId: string; actor: string; at: string; eventId: string; note?: string }
   | { type: 'approve'; submissionId: string; actor: string; at: string; eventId: string; note?: string }
   | { type: 'reject'; submissionId: string; actor: string; at: string; eventId: string; note: string }
+  /** Reverts a decision that is still the latest thing that happened (nothing has built on it yet). */
+  | { type: 'undo_decision'; submissionId: string; eventId: string }
   | {
       type: 'resubmit'
       submissionId: string
@@ -345,6 +347,13 @@ export function reducer(state: AppState, action: Action): AppState {
             event(action.eventId, 'rejected', action.actor, action.at, current, action.note.trim()),
           ],
         }
+      }
+
+      case 'undo_decision': {
+        const last = s.events[s.events.length - 1]
+        const isDecision = last?.type === 'approved' || last?.type === 'changes_requested' || last?.type === 'rejected'
+        if (!isDecision || last.id !== action.eventId) return s
+        return { ...s, status: 'awaiting_review', events: s.events.slice(0, -1) }
       }
 
       case 'resubmit': {

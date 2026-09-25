@@ -2,13 +2,18 @@ import { useState } from 'react'
 import { DueDate } from '../../../components/DueDate'
 import { StatusBadge } from '../../../components/StatusBadge'
 import { ASSET_TYPE_LABELS, PRODUCT_LABELS } from '../../../domain/catalog'
+import { submitterTerms } from '../../../domain/partners'
 import { unreviewedFindings } from '../../../domain/queue'
 import type { Partner, Submission } from '../../../domain/types'
 import { canRequestChanges, isUnderReview, latestVersion, sharedComments } from '../../../domain/workflow'
 import { timeAgo } from '../../../lib/format'
 import { useActions } from '../../../state/store'
 
-export type Outcome = { type: 'changes_requested'; shared: number } | { type: 'approved' }
+export type Outcome = { eventId: string } & (
+  | { type: 'changes_requested'; shared: number }
+  | { type: 'approved' }
+  | { type: 'rejected' }
+)
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
@@ -22,24 +27,33 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
   const actions = useActions()
   const version = latestVersion(submission)
   const underReview = isUnderReview(submission)
-  const [mode, setMode] = useState<'idle' | 'request' | 'approve'>('idle')
+  const [mode, setMode] = useState<'idle' | 'request' | 'approve' | 'reject'>('idle')
   const [note, setNote] = useState('')
+  const [reason, setReason] = useState('')
 
   const shared = sharedComments(submission, version.number).length
   const unreviewed = unreviewedFindings(submission)
   const canRequest = canRequestChanges(submission)
-  const partnerName = partner?.name ?? 'the partner'
+  const terms = submitterTerms(partner)
+  const partnerName = partner?.name ?? `the ${terms.noun}`
 
   function approve() {
-    actions.approve(submission.id)
+    const eventId = actions.approve(submission.id)
     setMode('idle')
-    onDecided({ type: 'approved' })
+    onDecided({ type: 'approved', eventId })
   }
 
   function sendRequest() {
-    actions.requestChanges(submission.id, note.trim() || undefined)
+    const eventId = actions.requestChanges(submission.id, note.trim() || undefined)
     setMode('idle')
-    onDecided({ type: 'changes_requested', shared })
+    onDecided({ type: 'changes_requested', shared, eventId })
+  }
+
+  function reject() {
+    if (!reason.trim()) return
+    const eventId = actions.reject(submission.id, reason.trim())
+    setMode('idle')
+    onDecided({ type: 'rejected', eventId })
   }
 
   return (
@@ -54,7 +68,7 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
             <button
               className={canRequest ? 'btn btn-primary' : 'btn'}
               disabled={!canRequest}
-              title={canRequest ? undefined : 'Confirm an issue or add feedback for the partner first'}
+              title={canRequest ? undefined : `Confirm an issue or add feedback for the ${terms.noun} first`}
               onClick={() => setMode('request')}
             >
               Request changes{canRequest && ` (${shared})`}
@@ -65,13 +79,16 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
             >
               Approve
             </button>
+            <button className="btn btn-quiet" onClick={() => setMode('reject')}>
+              Reject
+            </button>
           </div>
         )}
       </div>
 
       <dl className="ws-details">
         <div>
-          <dt>Partner</dt>
+          <dt>{terms.label}</dt>
           <dd>
             {partnerName}
             <span className="subtle"> · {partner?.kind === 'internal' ? 'Internal' : 'Affiliate'}</span>
@@ -114,7 +131,7 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
         <p className={canRequest ? 'ws-hint ws-hint-ready' : 'ws-hint'}>
           {canRequest
             ? `${plural(shared, 'feedback item')} ready to send. Nothing reaches ${partnerName} until you request changes.`
-            : 'To request changes, confirm a potential issue or add a comment for the partner.'}
+            : `To request changes, confirm a potential issue or add a comment for ${partnerName}.`}
         </p>
       )}
 
@@ -127,7 +144,7 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
           </p>
           <label className="field">
             <span>
-              Message to partner <span className="subtle">(optional)</span>
+              Message to {partnerName} <span className="subtle">(optional)</span>
             </span>
             <textarea
               rows={2}
@@ -161,6 +178,33 @@ export function WorkspaceHeader({ submission, partner, onDecided }: Props) {
           <div className="button-row">
             <button className="btn btn-primary" onClick={approve}>
               Approve anyway
+            </button>
+            <button className="btn" onClick={() => setMode('idle')}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      {underReview && mode === 'reject' && (
+        <div className="decision-panel decision-panel-danger">
+          <h2>Reject this submission?</h2>
+          <p className="muted">
+            Use this when the asset can’t be fixed with edits. {partnerName} will see your reason and would need to
+            start a new submission. Feedback in your draft won’t be sent.
+          </p>
+          <label className="field">
+            Reason <span className="subtle">(required, shared with {partnerName})</span>
+            <textarea
+              rows={2}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Promotes terms ClearPath doesn’t offer. Please build a new asset from approved messaging."
+              autoFocus
+            />
+          </label>
+          <div className="button-row">
+            <button className="btn btn-danger" disabled={!reason.trim()} onClick={reject}>
+              Reject submission
             </button>
             <button className="btn" onClick={() => setMode('idle')}>
               Cancel

@@ -1,5 +1,12 @@
 import { ruleIdFromKey, type RuleId } from './checks'
-import type { Submission } from './types'
+import type { Partner, Submission } from './types'
+
+/** Affiliates are "partners"; ClearPath's own marketing team is a "team". Keeps wording accurate for both. */
+export function submitterTerms(partner?: Partner) {
+  return partner?.kind === 'internal'
+    ? { noun: 'team', label: 'Team', forTag: 'For team' }
+    : { noun: 'partner', label: 'Partner', forTag: 'For partner' }
+}
 
 export interface PartnerHistory {
   /** Other submissions from the same partner. */

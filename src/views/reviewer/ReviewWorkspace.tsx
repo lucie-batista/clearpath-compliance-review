@@ -10,7 +10,7 @@ import { diffFields, previousVersion, revisionSummary } from '../../domain/revis
 import type { Partner, Submission } from '../../domain/types'
 import { currentFindings, findingReview, latestVersion } from '../../domain/workflow'
 import { timeAgo } from '../../lib/format'
-import { useAppState } from '../../state/store'
+import { useActions, useAppState } from '../../state/store'
 import { FeedbackPanel } from './workspace/FeedbackPanel'
 import { IssuesPanel } from './workspace/IssuesPanel'
 import { PartnerContext } from './workspace/PartnerContext'
@@ -34,6 +34,7 @@ function Workspace({ submission }: { submission: Submission }) {
   const version = latestVersion(submission)
   const [activeKey, setActiveKey] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const actions = useActions()
   const prev = previousVersion(submission)
   const summary = revisionSummary(submission)
   // On a resubmission, start with what changed: that is what the reviewer needs to verify.
@@ -62,7 +63,15 @@ function Workspace({ submission }: { submission: Submission }) {
       </Link>
 
       {outcome ? (
-        <OutcomeBanner submission={submission} partner={partner} outcome={outcome} />
+        <OutcomeBanner
+          submission={submission}
+          partner={partner}
+          outcome={outcome}
+          onUndo={() => {
+            actions.undoDecision(submission.id, outcome.eventId)
+            setOutcome(null)
+          }}
+        />
       ) : (
         <StatusBanner submission={submission} partner={partner} />
       )}
@@ -115,9 +124,12 @@ function Workspace({ submission }: { submission: Submission }) {
               />
             )}
           </section>
+        </div>
+        {/* Background context comes last on narrow screens, after the work itself. */}
+        <div className="ws-context">
           <PartnerContext submission={submission} partner={partner} />
           <section className="panel">
-            <h2>History</h2>
+            <h2>Activity</h2>
             <History events={submission.events} />
           </section>
         </div>
@@ -130,7 +142,7 @@ function Workspace({ submission }: { submission: Submission }) {
               setView('clean') // show the highlight in context
             }}
           />
-          <PreviousFeedback submission={submission} />
+          <PreviousFeedback submission={submission} partner={partner} />
           <FeedbackPanel key={version.number} submission={submission} partner={partner} />
         </div>
       </div>
@@ -142,10 +154,12 @@ function OutcomeBanner({
   submission,
   partner,
   outcome,
+  onUndo,
 }: {
   submission: Submission
   partner?: Partner
   outcome: Outcome
+  onUndo: () => void
 }) {
   const { submissions } = useAppState()
   const next = nextInQueue(submissions, submission.id)
@@ -156,14 +170,26 @@ function OutcomeBanner({
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     ref.current?.focus()
   }, [])
+  const name = partner?.name ?? 'the submitter'
   const message =
     outcome.type === 'approved'
       ? 'Approved.'
-      : `Changes requested. ${outcome.shared} feedback item${outcome.shared === 1 ? '' : 's'} shared with ${partner?.name ?? 'the partner'}.`
+      : outcome.type === 'rejected'
+        ? `Rejected. ${name} can see your reason.`
+        : `Changes requested. ${outcome.shared} feedback item${outcome.shared === 1 ? '' : 's'} shared with ${name}.`
+  // Undo stays available only while nothing has happened since (e.g. no resubmission).
+  const canUndo = submission.events[submission.events.length - 1]?.id === outcome.eventId
 
   return (
     <div className="banner banner-success banner-outcome" role="status" ref={ref} tabIndex={-1}>
-      <span>{message}</span>
+      <span>
+        {message}
+        {canUndo && (
+          <button className="btn-link" onClick={onUndo}>
+            Undo
+          </button>
+        )}
+      </span>
       {next ? (
         <Link to={`/review/${next.id}`} className="btn btn-primary">
           Next in queue: {next.title} →
@@ -183,7 +209,7 @@ function StatusBanner({ submission, partner }: { submission: Submission; partner
     case 'changes_requested':
       return (
         <div className="banner banner-info">
-          Waiting on {partner?.name ?? 'the partner'} to revise. Changes requested{' '}
+          Waiting on {partner?.name ?? 'the submitter'} to revise. Changes requested{' '}
           {timeAgo(lastEventAt(submission, 'changes_requested'))}.
         </div>
       )
