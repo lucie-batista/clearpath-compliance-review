@@ -18,6 +18,7 @@ export function PartnerSubmission() {
   const version = latestVersion(submission)
   // Partners only ever see feedback explicitly shared with them. Internal notes stay internal.
   const feedback = sharedComments(submission, version.number)
+  const requestNote = submission.events.findLast((e) => e.type === 'changes_requested')?.note
 
   return (
     <section>
@@ -30,6 +31,7 @@ export function PartnerSubmission() {
       {submission.status === 'changes_requested' ? (
         <>
           <h2>Requested changes</h2>
+          {requestNote && <p className="banner banner-info">{requestNote}</p>}
           <ul className="comments">
             {feedback.map((c) => (
               <li key={c.id}>

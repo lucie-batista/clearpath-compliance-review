@@ -131,6 +131,11 @@ export const CHECK_RULES: Record<RuleId, CheckRule> = Object.fromEntries(
   RULES.map(({ id, label, explanation, guidance }) => [id, { id, label, explanation, guidance }]),
 ) as Record<RuleId, CheckRule>
 
+/** Finding keys start with the rule ID (see runChecks). */
+export function ruleIdFromKey(key: string): RuleId {
+  return key.split('|')[0] as RuleId
+}
+
 export function runChecks(fields: AssetField[], product: Product): Finding[] {
   const fieldOrder = new Map(fields.map((f, i) => [f.key, i]))
   const findings: Finding[] = []

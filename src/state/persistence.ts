@@ -28,6 +28,14 @@ export function loadState(): AppState {
   return createSeed()
 }
 
+export function clearSavedState(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Nothing to clear.
+  }
+}
+
 export function saveState(state: AppState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))

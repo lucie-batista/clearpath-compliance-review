@@ -57,6 +57,11 @@ export function queueFor(submissions: Submission[], tab: QueueTab): Submission[]
   }
 }
 
+/** The next submission a reviewer should pick up after finishing the current one. */
+export function nextInQueue(submissions: Submission[], currentId: string): Submission | undefined {
+  return queueFor(submissions, 'needs_review').find((s) => s.id !== currentId)
+}
+
 export function queueCounts(submissions: Submission[], now = new Date()) {
   return {
     needs_review: submissions.filter((s) => s.status === 'awaiting_review').length,

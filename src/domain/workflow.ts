@@ -43,6 +43,7 @@ export type Action =
       }
     }
   | { type: 'delete_comment'; submissionId: string; commentId: string }
+  | { type: 'edit_comment'; submissionId: string; commentId: string; body: string }
   | { type: 'set_comment_resolved'; submissionId: string; commentId: string; resolved: boolean }
   | { type: 'request_changes'; submissionId: string; actor: string; at: string; eventId: string; note?: string }
   | { type: 'approve'; submissionId: string; actor: string; at: string; eventId: string; note?: string }
@@ -225,6 +226,17 @@ export function reducer(state: AppState, action: Action): AppState {
                 (r) => !(r.version === current && r.findingKey === target.findingKey),
               )
             : s.findingReviews,
+        }
+      }
+
+      case 'edit_comment': {
+        // Only unsent feedback on the version under review can be edited.
+        if (!isUnderReview(s) || !action.body.trim()) return s
+        const target = s.comments.find((c) => c.id === action.commentId)
+        if (!target || target.version !== current) return s
+        return {
+          ...s,
+          comments: s.comments.map((c) => (c.id === action.commentId ? { ...c, body: action.body.trim() } : c)),
         }
       }
 

@@ -1,4 +1,5 @@
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
+import { ScrollToTop } from './components/ScrollToTop'
 import { useActions, useAppState } from './state/store'
 import { PartnerSubmission } from './views/partner/PartnerSubmission'
 import { PartnerSubmissions } from './views/partner/PartnerSubmissions'
@@ -56,6 +57,7 @@ export default function App() {
           </button>
         </div>
       </header>
+      <ScrollToTop />
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/review" replace />} />

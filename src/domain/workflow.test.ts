@@ -71,6 +71,24 @@ describe('reviewing findings', () => {
   })
 })
 
+describe('editing draft feedback', () => {
+  it('edits unsent feedback, but not feedback already sent to the partner', () => {
+    let state = seed()
+    state = reducer(state, {
+      type: 'add_comment',
+      submissionId: 's-1001',
+      comment: { id: 'c1', field: 'body', body: 'Draft', visibility: 'shared', author: REVIEWER, at: AT },
+    })
+    state = reducer(state, { type: 'edit_comment', submissionId: 's-1001', commentId: 'c1', body: ' Revised ' })
+    expect(get(state, 's-1001').comments[0].body).toBe('Revised')
+
+    // s-1003 already had its feedback sent (changes requested), so it is locked.
+    const sent = seed()
+    const commentId = get(sent, 's-1003').comments[0].id
+    expect(reducer(sent, { type: 'edit_comment', submissionId: 's-1003', commentId, body: 'x' })).toBe(sent)
+  })
+})
+
 describe('decisions', () => {
   it('request changes requires at least one shared comment', () => {
     let state = seed()

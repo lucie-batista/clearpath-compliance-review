@@ -57,6 +57,8 @@ export function useActions() {
         }),
       deleteComment: (submissionId: string, commentId: string) =>
         dispatch({ type: 'delete_comment', submissionId, commentId }),
+      editComment: (submissionId: string, commentId: string, body: string) =>
+        dispatch({ type: 'edit_comment', submissionId, commentId, body }),
       requestChanges: (submissionId: string, note?: string) =>
         dispatch({ type: 'request_changes', submissionId, actor: REVIEWER_NAME, at: now(), eventId: newId('e'), note }),
       approve: (submissionId: string, note?: string) =>
