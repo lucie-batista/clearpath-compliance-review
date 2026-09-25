@@ -9,7 +9,8 @@ export function FeedbackPanel({ submission, partner }: { submission: Submission;
   const version = latestVersion(submission)
   const editable = isUnderReview(submission)
   const current = commentsForVersion(submission, version.number)
-  const earlier = submission.comments.filter((c) => c.version < version.number)
+  // The previous version's feedback has its own panel (checked against the new text); older rounds collapse here.
+  const earlier = submission.comments.filter((c) => c.version < version.number - 1)
   const forPartner = current.filter((c) => c.visibility === 'shared').length
   const partnerName = partner?.name ?? 'the partner'
 

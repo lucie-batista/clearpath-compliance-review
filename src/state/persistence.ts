@@ -2,7 +2,7 @@ import { createSeed } from '../data/seed'
 import type { AppState } from '../domain/types'
 
 // Bump when the stored shape changes, so browsers holding old data start fresh from the seed.
-const STORAGE_KEY = 'clearpath-review:v4'
+const STORAGE_KEY = 'clearpath-review:v5'
 
 function isAppState(value: unknown): value is AppState {
   const v = value as AppState | null

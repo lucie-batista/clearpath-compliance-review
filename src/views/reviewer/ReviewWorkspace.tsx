@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { AssetFields, type Highlight } from '../../components/AssetFields'
+import { DiffFields } from '../../components/DiffFields'
 import { History } from '../../components/History'
 import { NotFound } from '../../components/NotFound'
 import { CHECK_RULES } from '../../domain/checks'
 import { lastEventAt, nextInQueue } from '../../domain/queue'
+import { diffFields, previousVersion, revisionSummary } from '../../domain/revision'
 import type { Partner, Submission } from '../../domain/types'
 import { currentFindings, findingReview, latestVersion } from '../../domain/workflow'
 import { timeAgo } from '../../lib/format'
@@ -12,6 +14,8 @@ import { useAppState } from '../../state/store'
 import { FeedbackPanel } from './workspace/FeedbackPanel'
 import { IssuesPanel } from './workspace/IssuesPanel'
 import { PartnerContext } from './workspace/PartnerContext'
+import { PreviousFeedback } from './workspace/PreviousFeedback'
+import { RevisionSummary } from './workspace/RevisionSummary'
 import { WorkspaceHeader, type Outcome } from './workspace/WorkspaceHeader'
 
 export function ReviewWorkspace() {
@@ -30,6 +34,10 @@ function Workspace({ submission }: { submission: Submission }) {
   const version = latestVersion(submission)
   const [activeKey, setActiveKey] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const prev = previousVersion(submission)
+  const summary = revisionSummary(submission)
+  // On a resubmission, start with what changed: that is what the reviewer needs to verify.
+  const [view, setView] = useState<'changes' | 'clean'>(prev ? 'changes' : 'clean')
 
   const highlights: Highlight[] = currentFindings(submission).map((f) => ({
     id: f.key,
@@ -61,23 +69,51 @@ function Workspace({ submission }: { submission: Submission }) {
 
       <WorkspaceHeader submission={submission} partner={partner} onDecided={setOutcome} />
 
+      {summary && <RevisionSummary summary={summary} />}
+
       <div className="workspace">
         <div className="ws-main">
           <section className="panel">
-            <div className="panel-heading">
+            <div className="panel-heading panel-heading-wrap">
               <h2>Asset</h2>
-              {version.destinationUrl && (
-                <span className="subtle destination" title="Destination URL">
-                  {version.destinationUrl}
-                </span>
+              {prev && (
+                <div className="segmented" role="radiogroup" aria-label="Asset view">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={view === 'changes'}
+                    className={view === 'changes' ? 'segment segment-active' : 'segment'}
+                    onClick={() => setView('changes')}
+                  >
+                    Changes since v{prev.number}
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={view === 'clean'}
+                    className={view === 'clean' ? 'segment segment-active' : 'segment'}
+                    onClick={() => setView('clean')}
+                  >
+                    Potential issues
+                  </button>
+                </div>
               )}
             </div>
-            <AssetFields
-              fields={version.fields}
-              highlights={highlights}
-              activeId={activeKey}
-              onSelect={selectFromText}
-            />
+            {version.destinationUrl && (
+              <p className="destination subtle" title="Destination URL">
+                Destination: {version.destinationUrl}
+              </p>
+            )}
+            {prev && view === 'changes' ? (
+              <DiffFields diffs={diffFields(prev.fields, version.fields)} />
+            ) : (
+              <AssetFields
+                fields={version.fields}
+                highlights={highlights}
+                activeId={activeKey}
+                onSelect={selectFromText}
+              />
+            )}
           </section>
           <PartnerContext submission={submission} partner={partner} />
           <section className="panel">
@@ -86,7 +122,15 @@ function Workspace({ submission }: { submission: Submission }) {
           </section>
         </div>
         <div className="ws-side">
-          <IssuesPanel submission={submission} activeKey={activeKey} onSelect={setActiveKey} />
+          <IssuesPanel
+            submission={submission}
+            activeKey={activeKey}
+            onSelect={(key) => {
+              setActiveKey(key)
+              setView('clean') // show the highlight in context
+            }}
+          />
+          <PreviousFeedback submission={submission} />
           <FeedbackPanel key={version.number} submission={submission} partner={partner} />
         </div>
       </div>

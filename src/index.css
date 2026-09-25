@@ -745,6 +745,7 @@ textarea {
 }
 
 .destination {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1085,3 +1086,132 @@ textarea {
     display: none;
   }
 }
+
+/* ---------- Revision review ---------- */
+.revision-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 10px 16px;
+  margin: -8px 0 20px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.revision-label {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.panel-heading-wrap {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+p.destination {
+  margin: -4px 0 12px;
+  max-width: 100%;
+}
+
+.field-flag {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-subtle);
+}
+
+.field-flag-changed {
+  color: var(--accent);
+}
+
+.asset-field-unchanged dd {
+  color: var(--text-subtle);
+}
+
+.diff-added {
+  background: #d8f0e0;
+  color: #14532d;
+  text-decoration: none;
+  border-radius: 3px;
+  padding: 1px 1px;
+}
+
+.diff-removed {
+  background: #fbe0de;
+  color: #8a1f1b;
+  border-radius: 3px;
+  padding: 1px 1px;
+}
+
+.issue-group + .issue-group {
+  margin-top: 14px;
+}
+
+.issue-group-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.issue-resolved {
+  border-left-color: var(--green);
+  background: var(--surface-2);
+  cursor: default;
+}
+
+.issue-resolved .issue-quote {
+  color: var(--text-subtle);
+}
+
+.issue-history {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: var(--amber);
+  font-weight: 500;
+}
+
+.change-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.change-changed {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.change-unchanged {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
+.comment-resolved {
+  background: var(--surface-2);
+}
+
+.comment-resolved .comment-body {
+  color: var(--text-subtle);
+}
+
+.resolve-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.resolve-toggle input {
+  margin: 0;
+}
+

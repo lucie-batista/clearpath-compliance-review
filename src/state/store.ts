@@ -57,6 +57,8 @@ export function useActions() {
         }),
       deleteComment: (submissionId: string, commentId: string) =>
         dispatch({ type: 'delete_comment', submissionId, commentId }),
+      setCommentResolved: (submissionId: string, commentId: string, resolved: boolean) =>
+        dispatch({ type: 'set_comment_resolved', submissionId, commentId, resolved }),
       editComment: (submissionId: string, commentId: string, body: string) =>
         dispatch({ type: 'edit_comment', submissionId, commentId, body }),
       requestChanges: (submissionId: string, note?: string) =>

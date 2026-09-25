@@ -69,8 +69,24 @@ export function currentFindings(submission: Submission): Finding[] {
   return runChecks(latestVersion(submission).fields, submission.product)
 }
 
-export function findingReview(submission: Submission, findingKey: string): FindingReview | undefined {
+export type EffectiveReview = FindingReview & { carriedFrom?: number }
+
+/**
+ * The reviewer's decision on a finding in the latest version. A dismissal carries forward
+ * from the previous version when the exact same text is flagged again, so reviewers don't
+ * re-decide unchanged content. Confirmed issues never carry forward: if they're still
+ * present, the reviewer should see them again.
+ */
+export function findingReview(submission: Submission, findingKey: string): EffectiveReview | undefined {
   const version = latestVersion(submission).number
+  const own = submission.findingReviews.find((r) => r.version === version && r.findingKey === findingKey)
+  if (own) return own
+  const prior = previousFindingReview(submission, findingKey)
+  return prior?.decision === 'dismissed' ? { ...prior, carriedFrom: prior.version } : undefined
+}
+
+export function previousFindingReview(submission: Submission, findingKey: string): FindingReview | undefined {
+  const version = latestVersion(submission).number - 1
   return submission.findingReviews.find((r) => r.version === version && r.findingKey === findingKey)
 }
 
