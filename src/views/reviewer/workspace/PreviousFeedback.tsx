@@ -1,3 +1,4 @@
+import { REVIEWER_NAME } from '../../../data/seed'
 import { FIELD_LABELS } from '../../../domain/catalog'
 import { feedbackStatus, previousVersion, type FeedbackStatus } from '../../../domain/revision'
 import type { Submission } from '../../../domain/types'
@@ -24,15 +25,19 @@ export function PreviousFeedback({ submission }: { submission: Submission }) {
   if (items.length === 0) return null
   const editable = isUnderReview(submission)
   const resolved = items.filter((c) => c.resolved).length
+  const mine = items.every((c) => c.author === REVIEWER_NAME)
 
   return (
     <section className="panel">
       <div className="panel-heading">
-        <h2>Feedback from v{prev.number}</h2>
+        <h2>{mine ? 'Your' : 'Reviewer'} feedback on v{prev.number}</h2>
         <span className="subtle">
           {resolved} of {items.length} marked addressed
         </span>
       </div>
+      <p className="panel-intro">
+        What {mine ? 'you' : 'the reviewer'} asked for last round, checked against v{current.number}.
+      </p>
       <ul className="comment-list">
         {items.map((c) => {
           const status = STATUS[feedbackStatus(c, current.fields, prev.fields)]

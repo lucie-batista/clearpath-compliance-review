@@ -1,9 +1,10 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { FIELD_LABELS } from '../../../domain/catalog'
 import { CHECK_RULES, type Finding } from '../../../domain/checks'
 import { compareFindings } from '../../../domain/revision'
 import type { Submission } from '../../../domain/types'
 import { currentFindings, findingReview, isUnderReview, previousFindingReview } from '../../../domain/workflow'
+import { REVIEWER_NAME } from '../../../data/seed'
 import { useActions } from '../../../state/store'
 
 interface Props {
@@ -87,6 +88,9 @@ function IssueGroup({ title, children }: { title: string; children: ReactNode })
   )
 }
 
+/** "You" for the person reviewing now, otherwise the colleague's name. */
+const byWhom = (reviewer: string) => (reviewer === REVIEWER_NAME ? 'You' : reviewer)
+
 interface CardProps {
   submission: Submission
   finding: Finding
@@ -97,9 +101,12 @@ interface CardProps {
 function IssueCard({ submission, finding, active, onSelect }: CardProps) {
   const actions = useActions()
   const rule = CHECK_RULES[finding.ruleId]
-  const review = findingReview(submission, finding.key)
+  const carried = findingReview(submission, finding.key)
   const prior = previousFindingReview(submission, finding.key)
   const editable = isUnderReview(submission)
+  // "Review again" on a decision carried over from the previous version reopens the card.
+  const [reopened, setReopened] = useState(false)
+  const review = reopened && carried?.carriedFrom ? undefined : carried
 
   const state = review ? review.decision : 'open'
   const confirm = () => actions.reviewFinding(submission.id, finding, 'confirmed', rule.guidance)
@@ -123,26 +130,36 @@ function IssueCard({ submission, finding, active, onSelect }: CardProps) {
 
       {review ? (
         <div className="issue-status" onClick={(e) => e.stopPropagation()}>
-          <span className={review.decision === 'confirmed' ? 'status-confirmed' : 'status-dismissed'}>
-            {review.decision === 'confirmed'
-              ? editable
-                ? 'Confirmed · added to feedback draft'
-                : 'Confirmed · included in feedback'
-              : review.carriedFrom
-                ? `Dismissed on v${review.carriedFrom} · text unchanged`
-                : 'Dismissed'}
-          </span>
-          {review.note && <span className="subtle"> · {review.note}</span>}
-          {editable &&
-            (review.carriedFrom ? (
-              <button className="btn-link" onClick={confirm}>
-                Confirm instead
-              </button>
-            ) : (
-              <button className="btn-link" onClick={() => actions.clearFindingReview(submission.id, finding.key)}>
-                Undo
-              </button>
-            ))}
+          {review.carriedFrom ? (
+            <>
+              <span className="status-dismissed">
+                {byWhom(review.reviewer)} dismissed this on v{review.carriedFrom}
+              </span>
+              <span className="subtle"> · text unchanged since</span>
+              {review.note && <div className="status-note">“{review.note}”</div>}
+              {editable && (
+                <button className="btn-link btn-link-block" onClick={() => setReopened(true)}>
+                  Change decision
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <span className={review.decision === 'confirmed' ? 'status-confirmed' : 'status-dismissed'}>
+                {review.decision === 'confirmed'
+                  ? editable
+                    ? 'Confirmed · added to feedback draft'
+                    : 'Confirmed · included in feedback'
+                  : 'Dismissed'}
+              </span>
+              {review.note && <span className="subtle"> · {review.note}</span>}
+              {editable && (
+                <button className="btn-link" onClick={() => actions.clearFindingReview(submission.id, finding.key)}>
+                  Undo
+                </button>
+              )}
+            </>
+          )}
         </div>
       ) : editable ? (
         <div className="button-row" onClick={(e) => e.stopPropagation()}>

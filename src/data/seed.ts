@@ -235,7 +235,7 @@ const SUBMISSIONS: SeedSubmission[] = [
             {
               field: 'body',
               quote: 'No annual fee.',
-              body: 'If there are other fees (late, foreign transaction), link to the full rates and fees page next to this claim.',
+              body: 'If there are other fees (late payment, foreign transaction), add a reference right after this claim, e.g. “See Rates & Fees for other fees.”',
             },
             {
               field: 'headline',

@@ -1039,32 +1039,92 @@ textarea {
   color: var(--text-muted);
 }
 
-/* ---------- Partner detail (refined in M6) ---------- */
-.comments {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* ---------- Partner detail ---------- */
+.banner-neutral {
+  background: var(--blue-soft);
+  color: var(--blue);
 }
 
-.comments li {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+.partner-request {
+  font-weight: 400;
+}
+
+.partner-request-note {
+  margin: 6px 0 0;
+  font-style: italic;
 }
 
 .revise-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 16px;
 }
 
-.revise-form label {
+.revise-form .panel-heading {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.revise-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.revise-field label {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-muted);
+}
+
+.revise-field-flagged textarea {
+  border-color: var(--amber-line);
+}
+
+.revise-field textarea {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.change-request {
+  display: flex;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  font-size: 13px;
+}
+
+.change-number {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+}
+
+.change-quote {
+  font-style: italic;
+  color: var(--amber);
+  margin-bottom: 2px;
+}
+
+.revise-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.revise-footer .btn {
+  padding: 8px 16px;
+  font-size: 14px;
 }
 
 @media (max-width: 960px) {
@@ -1215,3 +1275,106 @@ p.destination {
   margin: 0;
 }
 
+
+.revise-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.revise-tools {
+  display: flex;
+  gap: 12px;
+}
+
+.revise-tools .btn-link {
+  margin: 0;
+  font-size: 12px;
+}
+
+.change-request-done {
+  background: var(--green-soft);
+}
+
+.change-request-done .change-number {
+  background: var(--green);
+}
+
+.change-request-done .change-quote {
+  color: var(--green);
+  text-decoration: line-through;
+}
+
+.change-content {
+  flex: 1;
+}
+
+.done-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.done-toggle input {
+  margin: 0;
+}
+
+.edited-tag {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.done-count {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.done-count-complete {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.revise-original {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
+.revise-original-label {
+  font-weight: 600;
+}
+
+.status-note {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.btn-link-block {
+  display: block;
+  margin: 6px 0 0;
+}
+
+.panel-intro {
+  margin: -6px 0 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
