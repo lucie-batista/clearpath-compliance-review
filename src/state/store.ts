@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, type Dispatch } from 'react'
 import { createSeed, REVIEWER_NAME } from '../data/seed'
 import type { Finding } from '../domain/checks'
-import type { AppState, AssetField, FieldKey, Visibility } from '../domain/types'
+import type { AiReview, AppState, AssetField, FieldKey, Visibility } from '../domain/types'
 import type { Action } from '../domain/workflow'
 
 export interface Store {
@@ -31,19 +31,22 @@ export function useActions() {
     () => ({
       reviewFinding: (
         submissionId: string,
-        finding: Finding,
+        // Rule-based and AI findings both reduce to: which text, in which field, under which key.
+        finding: Pick<Finding, 'key' | 'field' | 'text'>,
         decision: 'confirmed' | 'dismissed',
         commentBody?: string,
       ) =>
         dispatch({
           type: 'review_finding',
           submissionId,
-          finding,
+          finding: { key: finding.key, field: finding.field, text: finding.text },
           decision,
           reviewer: REVIEWER_NAME,
           at: now(),
           comment: commentBody ? { id: newId('c'), body: commentBody } : undefined,
         }),
+      setAiReview: (submissionId: string, review: AiReview) =>
+        dispatch({ type: 'set_ai_review', submissionId, review }),
       clearFindingReview: (submissionId: string, findingKey: string) =>
         dispatch({ type: 'clear_finding_review', submissionId, findingKey }),
       addComment: (

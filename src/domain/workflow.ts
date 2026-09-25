@@ -5,6 +5,7 @@ import type {
   Comment,
   FieldKey,
   FindingReview,
+  AiReview,
   HistoryEvent,
   Submission,
   Version,
@@ -29,6 +30,7 @@ export type Action =
       comment?: { id: string; body: string }
     }
   | { type: 'clear_finding_review'; submissionId: string; findingKey: string }
+  | { type: 'set_ai_review'; submissionId: string; review: AiReview }
   | {
       type: 'add_comment'
       submissionId: string
@@ -80,6 +82,11 @@ export type Action =
 
 export function latestVersion(submission: Submission): Version {
   return submission.versions[submission.versions.length - 1]
+}
+
+export function currentAiReview(submission: Submission): AiReview | undefined {
+  const version = latestVersion(submission).number
+  return submission.aiReviews?.find((r) => r.version === version)
 }
 
 /** Potential issues on the latest version. Always computed from the content, never stored. */
@@ -250,6 +257,13 @@ export function reducer(state: AppState, action: Action): AppState {
             },
           ],
         }
+      }
+
+      case 'set_ai_review': {
+        // Results only attach to the version they were run on; a newer version makes them stale.
+        if (action.review.version !== current) return s
+        const others = (s.aiReviews ?? []).filter((r) => r.version !== current)
+        return { ...s, aiReviews: [...others, action.review] }
       }
 
       case 'clear_finding_review': {

@@ -1,4 +1,12 @@
-import type { AssetType, EventType, FieldKey, Product, SubmissionStatus } from './types'
+import type { AiCategory, AssetType, EventType, FieldKey, Product, SubmissionStatus } from './types'
+
+export const AI_CATEGORY_LABELS: Record<AiCategory, string> = {
+  implied_claim: 'Implied claim',
+  missing_disclosure: 'Missing context',
+  misleading_framing: 'Misleading framing',
+  embedded_instructions: 'Text aimed at reviewers',
+  other: 'Other',
+}
 
 export const STATUS_LABELS: Record<SubmissionStatus, string> = {
   awaiting_review: 'Awaiting review',

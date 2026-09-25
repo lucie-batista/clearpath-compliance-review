@@ -66,6 +66,32 @@ export interface HistoryEvent {
   note?: string
 }
 
+export type AiCategory =
+  | 'implied_claim'
+  | 'missing_disclosure'
+  | 'misleading_framing'
+  | 'embedded_instructions'
+  | 'other'
+
+/** A potential issue suggested by the AI second opinion. Advisory only; the reviewer decides. */
+export interface AiFinding {
+  key: string
+  field: FieldKey
+  /** Verbatim text from the field (the server drops anything that isn't). */
+  quote: string
+  category: AiCategory
+  title: string
+  explanation: string
+  suggestedFeedback: string
+}
+
+export interface AiReview {
+  version: number
+  at: string
+  model: string
+  findings: AiFinding[]
+}
+
 export interface Submission {
   id: string
   title: string
@@ -79,6 +105,8 @@ export interface Submission {
   findingReviews: FindingReview[]
   comments: Comment[]
   events: HistoryEvent[]
+  /** AI second-opinion results, one per version it was run on. */
+  aiReviews?: AiReview[]
 }
 
 export interface AppState {

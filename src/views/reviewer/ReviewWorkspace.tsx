@@ -8,9 +8,10 @@ import { CHECK_RULES } from '../../domain/checks'
 import { lastEventAt, nextInQueue } from '../../domain/queue'
 import { diffFields, previousVersion, revisionSummary } from '../../domain/revision'
 import type { Partner, Submission } from '../../domain/types'
-import { currentFindings, findingReview, latestVersion } from '../../domain/workflow'
+import { currentAiReview, currentFindings, findingReview, latestVersion } from '../../domain/workflow'
 import { timeAgo } from '../../lib/format'
 import { useActions, useAppState } from '../../state/store'
+import { AiReviewPanel } from './workspace/AiReviewPanel'
 import { FeedbackPanel } from './workspace/FeedbackPanel'
 import { IssuesPanel } from './workspace/IssuesPanel'
 import { PartnerContext } from './workspace/PartnerContext'
@@ -48,6 +49,19 @@ function Workspace({ submission }: { submission: Submission }) {
     tone: findingReview(submission, f.key)?.decision ?? 'open',
     label: CHECK_RULES[f.ruleId].label,
   }))
+  for (const f of currentAiReview(submission)?.findings ?? []) {
+    const text = version.fields.find((x) => x.key === f.field)?.text ?? ''
+    const start = text.indexOf(f.quote)
+    if (start < 0) continue
+    highlights.push({
+      id: f.key,
+      field: f.field,
+      start,
+      end: start + f.quote.length,
+      tone: findingReview(submission, f.key)?.decision ?? 'open',
+      label: `AI suggestion: ${f.title}`,
+    })
+  }
 
   function selectFromText(key: string) {
     setActiveKey(key)
@@ -140,6 +154,14 @@ function Workspace({ submission }: { submission: Submission }) {
             onSelect={(key) => {
               setActiveKey(key)
               setView('clean') // show the highlight in context
+            }}
+          />
+          <AiReviewPanel
+            submission={submission}
+            activeKey={activeKey}
+            onSelect={(key) => {
+              setActiveKey(key)
+              setView('clean')
             }}
           />
           <PreviousFeedback submission={submission} partner={partner} />

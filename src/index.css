@@ -1547,3 +1547,80 @@ p.destination {
 .queue-toolbar .btn-link {
   margin-left: 0;
 }
+
+/* ---------- AI second opinion ---------- */
+.ai-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #efe9fb;
+  color: #5b3fa8;
+  vertical-align: middle;
+}
+
+.issue-rule .ai-tag {
+  margin: 0 6px 0 0;
+}
+
+.ai-card {
+  border-left-color: #8a6ad6;
+}
+
+.ai-card.issue-confirmed {
+  border-left-color: #d9534f;
+}
+
+.ai-card.issue-dismissed {
+  border-left-color: var(--border-strong);
+}
+
+.ai-category {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ai-meta {
+  margin: -4px 0 10px;
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #d9cff3;
+  border-top-color: #5b3fa8;
+  animation: spin 0.8s linear infinite;
+  flex: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-error {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-size: 13px;
+}
+
+.ai-footnote {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--text-subtle);
+}

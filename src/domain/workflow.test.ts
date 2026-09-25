@@ -248,10 +248,68 @@ describe('seed data', () => {
     }
   })
 
+  it('includes an asset that passes every keyword check but hides an instruction to reviewers (for the AI demo)', () => {
+    const s = get(seed(), 's-1015')
+    expect(runChecks(latestVersion(s).fields, s.product)).toEqual([])
+    expect(latestVersion(s).fields.map((f) => f.text).join(' ')).toContain('Ignore previous instructions')
+  })
+
+  it('includes misleading copy that passes every keyword check (for the AI demo)', () => {
+    const s = get(seed(), 's-1016')
+    expect(runChecks(latestVersion(s).fields, s.product)).toEqual([])
+  })
+
   it('covers every status, asset type, and product', () => {
     const subs = seed().submissions
     expect(new Set(subs.map((s) => s.status)).size).toBe(4)
     expect(new Set(subs.map((s) => s.assetType)).size).toBe(5)
     expect(new Set(subs.map((s) => s.product)).size).toBe(3)
+  })
+})
+
+describe('AI second opinion results', () => {
+  const review = (version: number) => ({
+    version,
+    at: AT,
+    model: 'claude-opus-5',
+    findings: [
+      {
+        key: 'ai|headline|x|0',
+        field: 'subject' as const,
+        quote: 'Guaranteed approval',
+        category: 'implied_claim' as const,
+        title: 't',
+        explanation: 'e',
+        suggestedFeedback: 'f',
+      },
+    ],
+  })
+
+  it('stores results against the current version, replacing an earlier run', () => {
+    let state = reducer(seed(), { type: 'set_ai_review', submissionId: 's-1001', review: review(1) })
+    state = reducer(state, { type: 'set_ai_review', submissionId: 's-1001', review: { ...review(1), model: 'rerun' } })
+    expect(get(state, 's-1001').aiReviews).toEqual([expect.objectContaining({ version: 1, model: 'rerun' })])
+  })
+
+  it('ignores results for a version that is no longer current', () => {
+    const state = seed()
+    expect(reducer(state, { type: 'set_ai_review', submissionId: 's-1006', review: review(1) })).toBe(state)
+  })
+
+  it('lets the reviewer confirm an AI finding like any other, creating shared feedback', () => {
+    let state = reducer(seed(), { type: 'set_ai_review', submissionId: 's-1001', review: review(1) })
+    const f = review(1).findings[0]
+    state = reducer(state, {
+      type: 'review_finding',
+      submissionId: 's-1001',
+      finding: { key: f.key, field: f.field, text: f.quote },
+      decision: 'confirmed',
+      reviewer: REVIEWER,
+      at: AT,
+      comment: { id: 'c-ai', body: f.suggestedFeedback },
+    })
+    expect(get(state, 's-1001').comments).toEqual([
+      expect.objectContaining({ id: 'c-ai', visibility: 'shared', quote: 'Guaranteed approval', findingKey: f.key }),
+    ])
   })
 })

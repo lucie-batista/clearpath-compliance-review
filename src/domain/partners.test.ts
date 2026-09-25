@@ -43,7 +43,7 @@ describe('queue filters and sorting', () => {
   it('filters by product, submitter, and free-text search across title, partner, and ad copy', () => {
     const { submissions, partners } = state
     expect(filterSubmissions(submissions, { ...none, product: 'mortgage_prequal' }, partners).every((s) => s.product === 'mortgage_prequal')).toBe(true)
-    expect(filterSubmissions(submissions, { ...none, partnerId: 'p-ratescout' }, partners).map((s) => s.id).sort()).toEqual(['s-1004', 's-1009'])
+    expect(filterSubmissions(submissions, { ...none, partnerId: 'p-ratescout' }, partners).map((s) => s.id).sort()).toEqual(['s-1004', 's-1009', 's-1015'])
     // "Guaranteed approval" only appears in ad copy
     expect(filterSubmissions(submissions, { ...none, search: 'guaranteed approval' }, partners).map((s) => s.id)).toContain('s-1001')
     expect(filterSubmissions(submissions, { ...none, search: 'lendcompare' }, partners).every((s) => s.partnerId === 'p-lendcompare')).toBe(true)
