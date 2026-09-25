@@ -1,0 +1,286 @@
+import type {
+  AppState,
+  AssetField,
+  Comment,
+  FieldKey,
+  HistoryEvent,
+  Submission,
+  Version,
+  Visibility,
+} from './types'
+
+/**
+ * All state changes go through this reducer, so reviewer and partner views
+ * always operate on the same submission / version / history state.
+ * IDs and timestamps are supplied by the caller to keep the reducer pure.
+ */
+export type Action =
+  | {
+      type: 'review_finding'
+      submissionId: string
+      finding: { key: string; field: FieldKey; text: string }
+      decision: 'confirmed' | 'dismissed'
+      reviewer: string
+      at: string
+      note?: string
+      /** Required when confirming: the feedback shared with the partner. */
+      comment?: { id: string; body: string }
+    }
+  | { type: 'clear_finding_review'; submissionId: string; findingKey: string }
+  | {
+      type: 'add_comment'
+      submissionId: string
+      comment: {
+        id: string
+        field: FieldKey
+        quote?: string
+        body: string
+        visibility: Visibility
+        author: string
+        at: string
+      }
+    }
+  | { type: 'delete_comment'; submissionId: string; commentId: string }
+  | { type: 'set_comment_resolved'; submissionId: string; commentId: string; resolved: boolean }
+  | { type: 'request_changes'; submissionId: string; actor: string; at: string; eventId: string; note?: string }
+  | { type: 'approve'; submissionId: string; actor: string; at: string; eventId: string; note?: string }
+  | { type: 'reject'; submissionId: string; actor: string; at: string; eventId: string; note: string }
+  | {
+      type: 'resubmit'
+      submissionId: string
+      fields: AssetField[]
+      actor: string
+      at: string
+      eventId: string
+    }
+  | { type: 'reset'; state: AppState }
+
+// ---------- Selectors ----------
+
+export function latestVersion(submission: Submission): Version {
+  return submission.versions[submission.versions.length - 1]
+}
+
+export function isUnderReview(submission: Submission): boolean {
+  return submission.status === 'awaiting_review'
+}
+
+export function commentsForVersion(submission: Submission, version: number): Comment[] {
+  return submission.comments.filter((c) => c.version === version)
+}
+
+export function sharedComments(submission: Submission, version: number): Comment[] {
+  return commentsForVersion(submission, version).filter((c) => c.visibility === 'shared')
+}
+
+/** Request changes needs at least one piece of feedback the partner can act on. */
+export function canRequestChanges(submission: Submission): boolean {
+  return (
+    isUnderReview(submission) &&
+    sharedComments(submission, latestVersion(submission).number).length > 0
+  )
+}
+
+export function fieldsChanged(previous: AssetField[], next: AssetField[]): boolean {
+  const before = new Map(previous.map((f) => [f.key, f.text.trim()]))
+  return (
+    previous.length !== next.length || next.some((f) => before.get(f.key) !== f.text.trim())
+  )
+}
+
+export function canResubmit(submission: Submission, fields: AssetField[]): boolean {
+  return (
+    submission.status === 'changes_requested' &&
+    fields.every((f) => f.text.trim().length > 0) &&
+    fieldsChanged(latestVersion(submission).fields, fields)
+  )
+}
+
+// ---------- Reducer ----------
+
+function updateSubmission(
+  state: AppState,
+  id: string,
+  update: (s: Submission) => Submission,
+): AppState {
+  let changed = false
+  const submissions = state.submissions.map((s) => {
+    if (s.id !== id) return s
+    const next = update(s)
+    changed = next !== s
+    return next
+  })
+  return changed ? { ...state, submissions } : state
+}
+
+function event(
+  id: string,
+  type: HistoryEvent['type'],
+  actor: string,
+  at: string,
+  version: number,
+  note?: string,
+): HistoryEvent {
+  return { id, type, actor, at, version, ...(note ? { note } : {}) }
+}
+
+export function reducer(state: AppState, action: Action): AppState {
+  if (action.type === 'reset') return action.state
+
+  return updateSubmission(state, action.submissionId, (s) => {
+    const current = latestVersion(s).number
+
+    switch (action.type) {
+      case 'review_finding': {
+        if (!isUnderReview(s)) return s
+        if (action.decision === 'confirmed' && !action.comment) return s
+        const { finding } = action
+        // A re-decision replaces the earlier one, along with any feedback it created.
+        const reviews = s.findingReviews.filter(
+          (r) => !(r.version === current && r.findingKey === finding.key),
+        )
+        let comments = s.comments.filter(
+          (c) => !(c.version === current && c.findingKey === finding.key),
+        )
+        if (action.decision === 'confirmed' && action.comment) {
+          comments = [
+            ...comments,
+            {
+              id: action.comment.id,
+              version: current,
+              field: finding.field,
+              quote: finding.text,
+              body: action.comment.body,
+              visibility: 'shared',
+              author: action.reviewer,
+              at: action.at,
+              findingKey: finding.key,
+              resolved: false,
+            },
+          ]
+        }
+        return {
+          ...s,
+          comments,
+          findingReviews: [
+            ...reviews,
+            {
+              findingKey: finding.key,
+              version: current,
+              decision: action.decision,
+              reviewer: action.reviewer,
+              at: action.at,
+              ...(action.note ? { note: action.note } : {}),
+            },
+          ],
+        }
+      }
+
+      case 'clear_finding_review': {
+        if (!isUnderReview(s)) return s
+        return {
+          ...s,
+          findingReviews: s.findingReviews.filter(
+            (r) => !(r.version === current && r.findingKey === action.findingKey),
+          ),
+          comments: s.comments.filter(
+            (c) => !(c.version === current && c.findingKey === action.findingKey),
+          ),
+        }
+      }
+
+      case 'add_comment': {
+        if (!isUnderReview(s) || !action.comment.body.trim()) return s
+        return {
+          ...s,
+          comments: [
+            ...s.comments,
+            { ...action.comment, body: action.comment.body.trim(), version: current, resolved: false },
+          ],
+        }
+      }
+
+      case 'delete_comment': {
+        // Only feedback that hasn't been sent to the partner yet can be deleted.
+        if (!isUnderReview(s)) return s
+        const target = s.comments.find((c) => c.id === action.commentId)
+        if (!target || target.version !== current) return s
+        return {
+          ...s,
+          comments: s.comments.filter((c) => c.id !== action.commentId),
+          findingReviews: target.findingKey
+            ? s.findingReviews.filter(
+                (r) => !(r.version === current && r.findingKey === target.findingKey),
+              )
+            : s.findingReviews,
+        }
+      }
+
+      case 'set_comment_resolved': {
+        if (!isUnderReview(s)) return s
+        return {
+          ...s,
+          comments: s.comments.map((c) =>
+            c.id === action.commentId ? { ...c, resolved: action.resolved } : c,
+          ),
+        }
+      }
+
+      case 'request_changes': {
+        if (!canRequestChanges(s)) return s
+        return {
+          ...s,
+          status: 'changes_requested',
+          events: [
+            ...s.events,
+            event(action.eventId, 'changes_requested', action.actor, action.at, current, action.note),
+          ],
+        }
+      }
+
+      case 'approve': {
+        if (!isUnderReview(s)) return s
+        return {
+          ...s,
+          status: 'approved',
+          events: [
+            ...s.events,
+            event(action.eventId, 'approved', action.actor, action.at, current, action.note),
+          ],
+        }
+      }
+
+      case 'reject': {
+        if (!isUnderReview(s) || !action.note.trim()) return s
+        return {
+          ...s,
+          status: 'rejected',
+          events: [
+            ...s.events,
+            event(action.eventId, 'rejected', action.actor, action.at, current, action.note.trim()),
+          ],
+        }
+      }
+
+      case 'resubmit': {
+        if (!canResubmit(s, action.fields)) return s
+        const version: Version = {
+          ...latestVersion(s),
+          number: current + 1,
+          fields: action.fields.map((f) => ({ ...f, text: f.text.trim() })),
+          submittedAt: action.at,
+          submittedBy: action.actor,
+        }
+        return {
+          ...s,
+          status: 'awaiting_review',
+          versions: [...s.versions, version],
+          events: [
+            ...s.events,
+            event(action.eventId, 'resubmitted', action.actor, action.at, version.number),
+          ],
+        }
+      }
+    }
+  })
+}
